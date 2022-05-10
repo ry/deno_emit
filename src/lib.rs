@@ -1,7 +1,7 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 
-#[macro_use]
-extern crate cfg_if;
+//#[macro_use]
+//extern crate cfg_if;
 
 mod ast;
 mod bundle_hook;
@@ -45,12 +45,10 @@ impl deno_graph::source::Loader for JsLoader {
         }
         Err(err) => Err(err),
       };
-      (
-        specifier.clone(),
-        response
-          .map(|value| value.into_serde().unwrap())
-          .map_err(|_| anyhow!("load rejected or errored")),
-      )
+
+      response
+        .map(|value| value.into_serde().unwrap())
+        .map_err(|_| anyhow!("load rejected or errored"))
     };
     Box::pin(f)
   }
@@ -85,10 +83,11 @@ pub async fn bundle(
     maybe_imports = Some(imports);
   }
   let graph = deno_graph::create_graph(
-    vec![root],
+    vec![(root, deno_graph::ModuleKind::Esm)],
     false,
     maybe_imports,
     &mut loader,
+    None,
     None,
     None,
     None,
@@ -97,7 +96,12 @@ pub async fn bundle(
   let bundle_type = match maybe_bundle_type.as_deref() {
     Some("module") | None => emit::BundleType::Module,
     Some("classic") => emit::BundleType::Classic,
-    Some(value) => return Err(JsValue::from(js_sys::Error::new(&format!("Unsupported bundle type \"{}\"", value)))),
+    Some(value) => {
+      return Err(JsValue::from(js_sys::Error::new(&format!(
+        "Unsupported bundle type \"{}\"",
+        value
+      ))))
+    }
   };
   let bundle_emit = emit::bundle(
     &graph,
