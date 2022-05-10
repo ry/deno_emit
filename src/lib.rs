@@ -1,8 +1,5 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 
-//#[macro_use]
-//extern crate cfg_if;
-
 mod ast;
 mod bundle_hook;
 mod emit;
